@@ -9,4 +9,4 @@
 [NYC Crime Report Data](https://htmlpreview.github.io/?https://github.com/wanlinglee0301/Data-Visualization_R/blob/master/NYC_crime_v1.nb.html)
 
 ### 3. Develope the various type of chart via ggplot in R
-3. [GGPLOT_Data Visualization](https://htmlpreview.github.io/?https://github.com/wanlinglee0301/Data-Visualization_R/blob/master/visualization_v1.nb.html)
+[GGPLOT_Data Visualization](https://htmlpreview.github.io/?https://github.com/wanlinglee0301/Data-Visualization_R/blob/master/visualization_v1.nb.html)
