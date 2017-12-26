@@ -1,0 +1,114 @@
+---
+title: "My Sleep Quality Analysis"
+output: flexdashboard::flex_dashboard
+---
+
+```{r,include=FALSE}
+library(ggplot2)
+filename = '~/Desktop/github/data/health_sleep_data.csv'
+data = read.csv(filename)
+```
+
+
+Data Summary
+=======================================
+
+###The data is collected through my iPhone's two plications: Sleep Cycle and Health. The data in Sleep Cycle includes three factors: Sleep_quality, Time_in_bed(hours), and Sleep_Acrivity(steps). The Health application has the daily record of walinging distance (mi). Here is a snapshot of the data:
+
+```{r}
+head(data)
+```
+###This project will focus on the date duing 3/24/2016 to 3/30/2016. Here is a summary of the data:
+```{r}
+summary(data)
+```
+
+
+Page 1 {data-orientation=column}
+=======================================
+
+
+column {data-width=300}
+---------------------------------
+###I am interested in the trend of my sleep qualiaty during this week. From the graph, the sleep quality went down drastically on 3/26 and then hit the peak on 3/30. 
+```{r}
+newday = as.Date(data$Date, "%m/%d/%Y")
+ggplot(data=data, aes(x=newday, y=Sleep_quality)) + 
+  geom_line(color="red") + 
+  geom_point(color="red") +
+  labs(x='Date', y='Sleep Quality (0~1)')
+```
+
+
+column {data-width=300}
+---------------------------------
+###I am also interested in knowing the trend of how may hours I was on the bed. 
+```{r}
+ggplot(data=data, aes(x=newday, y=Time_in_bed)) + 
+  geom_line(color = "blue") + 
+  geom_point(color="blue") +
+  labs(x='Date', y='Time_In_Bed (hour)')
+```
+
+
+Page2
+=========================================
+
+Row {data-height=300}
+-------------------------------------
+###The trend of sleep quality and time_in_bed looks pretty similar. Therefore, I would like to know the relationship between these two veriables. Through the following chart, we can see they have postive correlation (91.55%). Therefore, we can say when the application calcualted the value of sleep quality, the hours on the bed plays an important role. 
+
+```{r}
+plot(data$Time_in_bed, data$Sleep_quality,xlab="Time_In_Bed (hour)", ylab="Sleep Quality (0~1)",ylim = c(0,1))
+abline(lm(data$Sleep_quality~data$Time_in_bed))
+```
+
+###Furthermore, let's see the relationship between sleep activity and sleep quality. I am assuming that the more movement, the higher activity, and the worse sleep quality. Here, we use the regression line again to see the correlation between these two variables. Yes, they do seem to have negative relathipship. 
+
+```{r}
+plot(data$Sleep_Activity.steps., data$Sleep_quality,xlab="Sleep_Activity(steps)", ylab="Sleep Quality (0~1)",ylim = c(0,1))
+abline(lm(data$Sleep_quality~data$Sleep_Activity.steps.))
+```
+
+Row {data-height=600}
+-----------------------------------
+
+###To test my assumptions, here is the mutiple regression analysis: Sleep quality = Time_in_bed + Sleep_Activity. The regression line shows Sleep quality = -1.943e-01 +  1.376e-01 * Time_in_bed + -7.210e-06 * Sleep_Activity. Time_in_bed plays more important roles than Sleep_Activity, and Time_in_bed also has p-value less then 0.05. 
+```{r}
+fit = lm(Sleep_quality~Time_in_bed+Sleep_Activity.steps., data=data)
+summary(fit)
+```
+
+
+Page3 
+==============================
+
+
+Row {data-height=650}
+---------------------------------
+###I would also like to look at the trend of my walking distance during that week. On 3/26/16 and 3/27/16, I walked a hell lot as compared to other days. 
+
+```{r}
+ggplot(data, aes(Date,Distance.mi.)) + 
+  geom_bar(stat= "identity") 
+```
+
+
+Row {data-height=350}
+---------------------------------
+
+###Then, we can see the the relationship between the walking distance and Time_in_bed. The plot shows negative correlation, meaning the more I walk the less I sleep/in bed...? Maybe I spent most of my time walking? Can't remember what happend.
+
+```{r}
+plot(data$Distance.mi., data$Time_in_bed,xlab="Walking Distance (mi)", ylab="Time_in_bed (hours)")
+abline(lm(data$Time_in_bed~data$Distance.mi.),col="red")
+```
+
+###We can also see the relationship between the walking distance and sleep quality. Again, same as previous plot, the more I walk the worse I sleep. I better stop walking then...
+
+```{r}
+plot(data$Distance.mi., data$Sleep_quality,xlab="Walking Distance (mi)", ylab="Sleep_quality(0~1")
+abline(lm(data$Sleep_quality~data$Distance.mi.), col="blue")
+```
+
+

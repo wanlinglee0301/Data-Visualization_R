@@ -1,0 +1,158 @@
+---
+title: "NYC Crime Report Data"
+output:
+  html_notebook: 
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    fig_caption: true
+    code_folding: hide
+---
+
+This script is to explore the big data of NYC crime reports. 
+
+```{r, message=FALSE}
+library(dplyr)
+library(ggplot2)
+filename = '~/Desktop/github/data/complaints.csv'
+data = read.csv(filename)
+head(data, 30)
+```
+
+Here we are focusing only on unique cases, regardless the Allegation Type and Description. The following graphs are done by removing duplicated UniqueComplaintID.
+
+```{r}
+idx = duplicated(data$UniqueComplaintId)
+data_sub = data[!idx,]
+```
+
+## 1. Trend in Filing Place
+```{r, warning=FALSE}
+ggplot(data_sub, aes(Received_Year, fill = ComplaintFiledPlace)) + 
+  geom_bar() + 
+  scale_x_continuous(limits = c(2003,2017)) +
+  scale_fill_discrete(name = "Complaint Filed Place")
+```
+From the chart, we can easily see that CCRB and IAB are the main complaint filed places. And from 2004 to 2016, there is no big change in terms of the filed place. 
+
+## 2. Trend in Filing Method 
+```{r,warning=FALSE}
+ggplot(data_sub, aes(Received_Year, fill = ComplaintFiledMode)) + 
+  geom_bar() +
+  scale_x_continuous(limits = c(2003,2017))+
+  scale_fill_discrete(name = "Complaint Filed Mode")
+```
+We are also interested in if the filed mode would change dramatically since the technoogy has been improved lately. I was assuming that the online-website and E-mail should increase a lot. However, based on the chart, the trend of filed mode hass not changed a lot; most of compliants were filed through phone from 2004 to 2016. Which probably makes sense, because when making complaints, making a phone call is probably faster than any other means. 
+
+## 3. Filed Mode vs Filed Place
+```{r, fig.width=7.8, fig.height=5.5}
+ggplot(data_sub, aes(ComplaintFiledMode, fill = ComplaintFiledPlace)) + 
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+This chart is not surprised that CCRB is the main filed place, because from the first and second graph, we know phone is the main method and CCRB has the most counts. Furthermore, we can also clearly see that most of the cases filed through IAB were by phone. 
+
+## 4. Trend in Full Investigation
+```{r, warning=FALSE}
+ggplot(data_sub, aes(Received_Year, fill = Is_Full_Investigation)) + geom_bar() +
+  scale_x_continuous(limits = c(2003,2017))
+```
+We want to see if there would be more compliant cases that have been fully investigated over time. However, the trend is not significantly different; the ratial of full investigation vs no full investigtion is about the same. 
+
+## 5. Trend in Borough of Occurrence
+```{r,warning=FALSE}
+ggplot(data_sub, aes(Received_Year, fill = Borough_of_Occurrence)) + geom_bar() +
+  scale_x_continuous(limits = c(2003,2017))
+```
+From the bar chart, the areas of cases happened have not changed greatly from 2004 to 2016.  The majority is in Brooklyn, then Manhattan, then Bronx. 
+
+## 6. Trend in Incident Location
+```{r,warning=FALSE}
+ggplot(data_sub, aes(Received_Year, fill = IncidentLocation)) + geom_bar() +
+  scale_x_continuous(limits = c(2003,2017))+
+  scale_fill_discrete(name = "Incident Location")
+```
+Besides the borough, we are also interested in which location the incident happened more within these compliant cases. It looks like the Street/Highway is the majority, which is not suprised. And the trend of those locations is stable as well. 
+
+## 7. Trend in Video Evidence
+```{r,warning=FALSE}
+ggplot(data_sub, aes(Received_Year, fill = Complain_Has_Video_Evidence)) + geom_bar() +
+  scale_x_continuous(limits = c(2004,2016))
+```
+The chart is interesteing. When I researched the row data, I expected that the video_evidence should increase since the video technology has become easier to access. And YES, the video evidence appeared in 2011 and is increasing over time. 
+
+## 8. Video Evidence vs Location
+Calculate some basic statistics using dplyr
+```{r}
+video_sum = data_sub %>% 
+  group_by(Complain_Has_Video_Evidence) %>% 
+  summarise(count=n())
+video_sum
+
+location_video_count = data_sub %>% 
+  group_by(Complain_Has_Video_Evidence, IncidentLocation) %>% 
+  summarise(count=n())
+location_video_count
+
+idx_F = location_video_count$Complain_Has_Video_Evidence == FALSE
+idx_T = location_video_count$Complain_Has_Video_Evidence == TRUE
+
+location_video_count[idx_F, 'Percentage'] = location_video_count[idx_F, 'count']/video_sum$count[1]*100.0
+location_video_count[idx_T, 'Percentage'] = location_video_count[idx_T, 'count']/video_sum$count[2]*100.0
+```
+
+```{r, fig.width=8}
+ggplot(location_video_count, aes(x=IncidentLocation, y=Percentage, fill=Complain_Has_Video_Evidence)) + 
+  geom_bar(position='dodge', stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+After knowing the trend of video evidence, we are interested in knowing which location has higher use of video evidence. In other words, we are comparing the ratio of each incident location between Has Video vs. No video.  Street/highway again shows the majority cases, but it does not have any big difference regarding whether the cases have video evidence or not. On the other hand, **Commercial building** has more cases with video evidence. And interestingly, **Police building** has less cases with video evidence, which is probably due to everything is right in front of caps' eyes, no need for any videos.
+
+## 9. Video Evidence vs Cities
+```{r, fig.width=8}
+video_sum = data_sub %>% 
+  group_by(Complain_Has_Video_Evidence) %>% 
+  summarise(count=n())
+
+city_video_count = data_sub %>% 
+  group_by(Complain_Has_Video_Evidence, Borough_of_Occurrence) %>% 
+  summarise(count=n())
+
+idx_F = city_video_count$Complain_Has_Video_Evidence == 'FALSE'
+idx_T = city_video_count$Complain_Has_Video_Evidence == 'TRUE'
+
+city_video_count[idx_F, 'Percentage'] = city_video_count[idx_F, 'count']/video_sum$count[1]*100.0
+city_video_count[idx_T, 'Percentage'] = city_video_count[idx_T, 'count']/video_sum$count[2]*100.0
+
+ggplot(city_video_count, aes(x=Borough_of_Occurrence, y=Percentage, fill=Complain_Has_Video_Evidence)) + 
+  geom_bar(position='dodge', stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+Furthermore, we are interested in which area/city has more cases of video ecidence. We can repeat above method but change variable to Borough_of_Occurrence. Most cases in Manhattan have video evidence. 
+
+## 10. Video Evidence vs Full Investigation
+```{r}
+vd = data_sub %>% 
+  group_by(Complain_Has_Video_Evidence) %>% 
+  summarise(count=n())
+
+vd_fi = data_sub %>% 
+  group_by(Complain_Has_Video_Evidence, Is_Full_Investigation) %>% 
+  summarise(count=n())
+
+idx_F = vd_fi$Complain_Has_Video_Evidence == 'FALSE'
+idx_T = vd_fi$Complain_Has_Video_Evidence == 'TRUE'
+
+vd_fi[idx_F, 'percentage'] = vd_fi[idx_F, 'count']/vd$count[1]*100
+vd_fi[idx_T, 'percentage'] = vd_fi[idx_T, 'count']/vd$count[2]*100
+
+ggplot(vd_fi, aes(x=Complain_Has_Video_Evidence, y=percentage, fill = Is_Full_Investigation)) + 
+  geom_bar(stat='identity') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+The case is likely to be fully investigated if the case has video evidence!
+
+Overall, making these plots allow us to answer some questions in big data much more quickly.  However, we need futher statistical testing to prove some of the assumptions.
+

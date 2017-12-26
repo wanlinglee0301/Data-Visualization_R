@@ -1,0 +1,162 @@
+---
+title: "Basic R Visualizations"
+output:
+  html_notebook: 
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    fig_caption: true
+    code_folding: hide
+---
+
+This script is a note for myself to document various plotting methods I learned over time.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+```
+
+
+## 1. MPG Data
+```{r}
+data("mpg")
+head(mpg)
+```
+
+### 1.1 Transmission Type in Different Car Classes
+```{r}
+ggplot(mpg,aes(class, fill = trans)) + geom_bar() +
+  scale_fill_discrete(name = "Transmission") +
+  theme_bw()
+```
+Some take home messages: majority of the **minivans** are **auto(l4)** type. And ocmpact cars have more manual(m5) than SUVs, which has more auto(l4).
+
+### 1.2 Car Makers vs Car Class
+```{r}
+ggplot(mpg,aes(manufacturer, fill = class)) + geom_bar() +
+  scale_fill_discrete(name = "Car Class") +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+In this dataset, Honda only has subcompact, whereas Land Rover, Lincoln, Mercury, and Jeep only have SUV.
+
+### 1.3 MPG of each Car Makers 
+```{r}
+ggplot(mpg,aes(manufacturer,hwy)) + geom_boxplot() +
+  theme_classic() +
+  coord_flip() +
+  xlab('Vehicle Manufacturer') +
+  ylab('Highway Fuel Efficiency (miles/gallon)')
+```
+Overall, Honda has the best MPG. This might not be fair, because we do not consider the class of the car each manufactors make. From previous plot, Honda only has subcompact cars, that might be the reason it has the best MPG.
+
+
+## 2. Diamonds Data
+```{r}
+data("diamonds")
+head(diamonds)
+```
+
+### 2.1 Diamond Price Distribution for Different Quality
+using Economist's theme
+```{r}
+ggplot(diamonds, aes(price, fill=cut)) + geom_density(adjust=1, alpha=0.3, aes(colour=cut)) +
+  theme_economist() +
+  xlab('Diamond Price (USD)') +
+  ylab('Density') +
+  ggtitle('Diamond Price Density')
+```
+
+## 3. Iris Data
+```{r}
+data("iris")
+head(iris)
+```
+
+### 3.1 Relationship between Petal and Sepal Length
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length)) +
+  geom_point() +    
+  geom_smooth(method=lm) +
+  theme_minimal() +
+  xlab('Iris Sepal Length') +
+  ylab('Iris Petal Length') +
+  ggtitle('Relationship between Petal and Sepal Length')
+```
+Overall it does seem to have some correlation between Sepal length and Petal length. However, the lower left population is a bit dissimmilar, which suggests there may have an additional factor that comes in play.
+
+### 3.2 Relationship between Petal and Sepal Length (at Different Species)
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, colour=Species)) +
+  geom_point() +    
+  geom_smooth(method=lm, se=FALSE) +
+  theme_minimal() +
+  labs(x='Iris Sepal Length',
+       y='Iris Petal Length',
+       title='Relationship between Petal and Sepal Length',
+       subtitle='Species level comparison') +
+  theme(legend.position="bottom")
+```
+
+## 4. NYC Flight Data
+```{r}
+library(nycflights13)
+# Load the data (abbreviate name for ease)
+head(flights)
+```
+
+### 4.1 Data Manipulation - 2013 UA Average Delay per Month in New York Airports
+```{r}
+# Manipulate data in prep for graphic
+dat2 <- flights %>%
+  select(year, month, arr_delay, carrier ) %>%
+  filter(carrier == "UA", year == 2013) %>% ## only look at UA at 2013
+  group_by(month) %>%
+  summarise(delay = mean(arr_delay, na.rm = TRUE)) %>%
+  as.data.frame()
+head(dat2)
+```
+### 4.2 Bar Plot (Month is Discrete)
+```{r}
+ggplot(dat2, aes(factor(month),delay)) + 
+  geom_bar(stat= "identity") +
+  xlab("Month") + ylab("Average Flight Departure Delay (mins)") +
+  ggtitle("2013 UA Departure Delay in NY Airports") +
+  ggthemes::theme_tufte()
+```
+
+### 4.3 Line Plot (Month is continuous)
+```{r}
+ggplot(dat2, aes(month, delay)) + 
+  geom_smooth(na.rm = TRUE) +
+  xlab("Month") + ylab("Flight Departure Delay (minutes)") +
+  ggtitle("2013 UA Departure Delay in NY Airports")
+```
+
+### 4.4 Boxplot
+```{r}
+dat4 <- flights %>%
+  select(year, month,arr_delay,carrier) %>%
+  group_by(month) %>%
+  filter(carrier == "UA", year == 2013) %>%
+  as.data.frame()
+
+ggplot(dat4, aes(factor(month),arr_delay)) + 
+  geom_boxplot() +
+  xlab("Month") + ylab("UA Flight Departure Delay (minutes)") +
+  ggtitle("Annual Variability of UA Flight Departure Delays in NY in 2013")
+```
+
+
+
+
+
+
+
+
+
+
