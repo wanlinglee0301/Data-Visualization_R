@@ -1,6 +1,6 @@
 # Data-Visualization_R
 
-## Projects as taking Data Analytics Courses in Hassirsburg University 
+## Projects as taking Data Analytics Courses in Harrisburg University 
 
 ### 1. Create the flexdashboard in mutiple pages for myself data in R Markdown 
 [My Sleep Quality Analysis](https://htmlpreview.github.io/?https://github.com/wanlinglee0301/Data-Visualization_R/blob/master/My_Sleep_Analysis.html#page3)
